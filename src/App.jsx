@@ -23,7 +23,6 @@ export default function CalorieCalculator() {
   // Helper component for deficit cards with pleasure margin
   const DeficitCard = ({ type, data, otherDeficitData, phase }) => {
     const isModere = type === 'modere';
-    const color = isModere ? 'green' : 'orange';
     const label = isModere ? 'Déficit Modéré ⭐' : 'Déficit Intense';
     const description = isModere ? 'Perte lente mais durable (-300 kcal)' : 'Perte rapide, idéale en fin de programme (-500 kcal)';
     
@@ -31,17 +30,20 @@ export default function CalorieCalculator() {
     const otherHasWarning = otherDeficitData?.hasWarning;
     
     return (
-      <div className={`bg-gradient-to-r from-${color}-900/40 to-${color}-800/40 rounded-2xl p-6 border border-${color}-700/50 shadow-xl`}>
+      <div className={isModere 
+        ? "bg-gradient-to-r from-green-900/40 to-green-800/40 rounded-2xl p-6 border border-green-700/50 shadow-xl"
+        : "bg-gradient-to-r from-orange-900/40 to-orange-800/40 rounded-2xl p-6 border border-orange-700/50 shadow-xl"
+      }>
         <div className="flex items-center justify-between mb-4">
           <div className="flex items-center gap-3">
-            <TrendingDown className={`w-8 h-8 text-${color}-400`} />
+            <TrendingDown className={isModere ? "w-8 h-8 text-green-400" : "w-8 h-8 text-orange-400"} />
             <div>
               <h3 className="text-xl font-bold text-white">{label}</h3>
               <p className="text-sm text-gray-300">{description}</p>
             </div>
           </div>
           <div className="text-right">
-            <div className={`text-3xl font-bold text-${color}-400`}>{data.deficit}</div>
+            <div className={isModere ? "text-3xl font-bold text-green-400" : "text-3xl font-bold text-orange-400"}>{data.deficit}</div>
             <div className="text-sm text-gray-300">kcal/jour</div>
           </div>
         </div>
@@ -57,7 +59,7 @@ export default function CalorieCalculator() {
                   ⚠️ Les valeurs peuvent légèrement varier d'un jour à l'autre selon les repas, pensez à recalculer.
                 </p>
               </div>
-              <div className={`text-2xl font-bold text-${color}-400`}>
+              <div className={isModere ? "text-2xl font-bold text-green-400" : "text-2xl font-bold text-orange-400"}>
                 1800 kcal
               </div>
             </div>
@@ -66,7 +68,7 @@ export default function CalorieCalculator() {
                 <p className="text-sm font-semibold text-white mb-1">Marge Plaisir 🍕</p>
                 <p className="text-xs text-gray-400">Nombre de calories hors repas à répartir selon vos envies</p>
               </div>
-              <div className={`text-2xl font-bold text-${color}-400`}>
+              <div className={isModere ? "text-2xl font-bold text-green-400" : "text-2xl font-bold text-orange-400"}>
                 {data.marge} kcal
               </div>
             </div>
@@ -529,3 +531,4 @@ export default function CalorieCalculator() {
     </div>
   );
 }
+
