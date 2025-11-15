@@ -77,9 +77,9 @@ export default function CalorieCalculator() {
           <div className="bg-red-900/30 border border-red-700/50 rounded-lg p-4">
             <p className="text-sm font-semibold text-red-400 mb-2">⚠️ Attention</p>
             {!isModere && !otherHasWarning ? (
-              // Optimal < 1800 but Modéré >= 1800
+              // Intense < 1800 but Modéré >= 1800
               <p className="text-xs text-gray-300 leading-relaxed">
-                Votre déficit optimal ({data.deficit} kcal) est inférieur au programme de base (1800 kcal). 
+                Votre déficit intense ({data.deficit} kcal) est inférieur au programme de base (1800 kcal). 
                 <span className="font-semibold text-white"> Nous vous conseillons de privilégier le déficit modéré</span> ({otherDeficitData.deficit} kcal) 
                 qui vous offre une marge plaisir de {otherDeficitData.marge} kcal tout en assurant une progression durable.
               </p>
@@ -87,7 +87,7 @@ export default function CalorieCalculator() {
               // Both < 1800
               <div className="text-xs text-gray-300 leading-relaxed space-y-2">
                 <p>
-                  Votre {isModere ? 'déficit modéré' : 'déficit optimal'} ({data.deficit} kcal) est inférieur au programme de base (1800 kcal).
+                  Votre {isModere ? 'déficit modéré' : 'déficit intense'} ({data.deficit} kcal) est inférieur au programme de base (1800 kcal).
                   {Math.abs(data.marge) > 0 && ` Il manque environ ${Math.abs(data.marge)} kcal.`}
                 </p>
                 <p className="font-semibold text-white">Options recommandées :</p>
