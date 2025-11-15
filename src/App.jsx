@@ -132,20 +132,15 @@ export default function CalorieCalculator() {
 
     const PROGRAMME_BASE = 1800; // kcal du programme (400 + 700 + 700)
 
-    // Calcul pour niveau actuel (Phase Reset)
-    const tdeeActuel = bmr * activiteFactors[formData.activite].value;
-    const deficitModereActuel = tdeeActuel - 300;
-    const deficitOptimalActuel = tdeeActuel - 500;
-
-    // Calcul pour phases suivantes : MAX(niveau actuel, "Actif")
+    // Calcul pour le programme : MAX(niveau actuel, "Actif")
     const activiteOrder = ['sedentaire', 'leger', 'modere', 'actif', 'extreme'];
     const niveauProgramme = activiteOrder.indexOf(formData.activite) >= activiteOrder.indexOf('modere') 
       ? formData.activite 
       : 'modere';
     
-    const tdeeActif = bmr * activiteFactors[niveauProgramme].value;
-    const deficitModereActif = tdeeActif - 300;
-    const deficitOptimalActif = tdeeActif - 500;
+    const tdeeProgramme = bmr * activiteFactors[niveauProgramme].value;
+    const deficitModere = tdeeProgramme - 300;
+    const deficitIntense = tdeeProgramme - 500;
 
     // Helper function to calculate pleasure margin and warnings
     const calculateMargeInfo = (deficit) => {
@@ -157,20 +152,18 @@ export default function CalorieCalculator() {
       };
     };
 
+    // Calcul maintenance actuelle (pour info contextuelle)
+    const maintenanceActuelle = Math.round(bmr * activiteFactors[formData.activite].value);
+    const showContextInfo = formData.activite !== niveauProgramme;
+
     setResult({
-      phaseReset: {
-        maintenance: Math.round(tdeeActuel),
-        deficitModere: calculateMargeInfo(deficitModereActuel),
-        deficitOptimal: calculateMargeInfo(deficitOptimalActuel)
-      },
-      phaseActive: {
-        maintenance: Math.round(tdeeActif),
-        deficitModere: calculateMargeInfo(deficitModereActif),
-        deficitOptimal: calculateMargeInfo(deficitOptimalActif)
-      },
+      maintenance: Math.round(tdeeProgramme),
+      deficitModere: calculateMargeInfo(deficitModere),
+      deficitIntense: calculateMargeInfo(deficitIntense),
       niveauActuel: formData.activite,
       niveauProgramme: niveauProgramme,
-      showPhaseExplanation: activiteOrder.indexOf(formData.activite) < activiteOrder.indexOf('modere')
+      maintenanceActuelle: maintenanceActuelle,
+      showContextInfo: showContextInfo
     });
   };
 
@@ -333,159 +326,61 @@ export default function CalorieCalculator() {
         {/* Results */}
         {result && (
           <div className="animate-fade-in space-y-8">
-            {/* Phase explanation - only for users below "Actif" level */}
-            {result.showPhaseExplanation && (
-              <div className="bg-red-900/20 border border-red-700/50 rounded-xl p-5">
+            {/* Context info - only for users below "Actif" level */}
+            {result.showContextInfo && (
+              <div className="bg-blue-900/20 border border-blue-700/50 rounded-xl p-4">
                 <p className="text-sm text-gray-200 leading-relaxed">
-                  <span className="font-semibold text-red-400">💡 Important :</span> Le calculateur vous propose 2 estimations : 
-                  une pour votre <span className="font-semibold">niveau actuel</span> (Phase Reset) et une pour quand vous serez 
-                  <span className="font-semibold"> actif grâce au programme</span> (Phases suivantes). Utilisez la bonne estimation selon votre phase !
+                  <span className="font-semibold text-blue-400">💡 Info :</span> Votre niveau actuel ({activiteFactors[result.niveauActuel].label.toLowerCase()}) 
+                  correspond à une maintenance de {result.maintenanceActuelle} kcal/jour. 
+                  Avec le programme, vous passerez à un niveau "{activiteFactors[result.niveauProgramme].label}" 
+                  dès le premier jour, augmentant votre maintenance à {result.maintenance} kcal/jour.
                 </p>
               </div>
             )}
 
-            {result.showPhaseExplanation ? (
-              // Show two phases for users below "Actif"
-              <>
-                {/* Phase Reset */}
-                <div>
-                  <div className="flex items-center gap-2 mb-4">
-                    <div className="h-1 w-12 bg-gradient-to-r from-red-500 to-red-700 rounded"></div>
-                    <h2 className="text-2xl font-bold text-white">Phase Reset</h2>
-                    <div className="h-1 flex-1 bg-gradient-to-r from-red-700 to-transparent rounded"></div>
-                  </div>
-                  <p className="text-gray-400 text-sm mb-4">
-                    Basé sur votre niveau d'activité actuel ({activiteFactors[result.niveauActuel].label.toLowerCase()})
-                  </p>
+            {/* Single results block */}
+            <div>
+              <div className="flex items-center gap-2 mb-4">
+                <div className="h-1 w-12 bg-gradient-to-r from-red-500 to-red-700 rounded"></div>
+                <h2 className="text-2xl font-bold text-white">Vos besoins caloriques pour le programme</h2>
+                <div className="h-1 flex-1 bg-gradient-to-r from-red-700 to-transparent rounded"></div>
+              </div>
 
-                  {/* Maintenance Reset */}
-                  <div className="bg-gradient-to-r from-gray-800 to-gray-700 rounded-2xl p-6 mb-4 border border-gray-600 shadow-xl">
-                    <div className="flex items-center justify-between">
-                      <div className="flex items-center gap-3">
-                        <Activity className="w-8 h-8 text-white" />
-                        <div>
-                          <h3 className="text-xl font-bold text-white">Maintenance</h3>
-                          <p className="text-sm text-gray-300">Pour maintenir votre poids actuel</p>
-                        </div>
-                      </div>
-                      <div className="text-right">
-                        <div className="text-3xl font-bold text-white">{result.phaseReset.maintenance}</div>
-                        <div className="text-sm text-gray-300">kcal/jour</div>
-                      </div>
+              {/* Maintenance */}
+              <div className="bg-gradient-to-r from-gray-800 to-gray-700 rounded-2xl p-6 mb-4 border border-gray-600 shadow-xl">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-3">
+                    <Activity className="w-8 h-8 text-white" />
+                    <div>
+                      <h3 className="text-xl font-bold text-white">Maintenance</h3>
+                      <p className="text-sm text-gray-300">Pour maintenir votre poids</p>
                     </div>
                   </div>
-
-                  {/* Déficit Modéré Reset */}
-                  <div className="mb-4">
-                    <DeficitCard 
-                      type="modere" 
-                      data={result.phaseReset.deficitModere} 
-                      otherDeficitData={result.phaseReset.deficitOptimal}
-                      phase="reset"
-                    />
-                  </div>
-
-                  {/* Déficit Optimal Reset */}
-                  <DeficitCard 
-                    type="optimal" 
-                    data={result.phaseReset.deficitOptimal} 
-                    otherDeficitData={result.phaseReset.deficitModere}
-                    phase="reset"
-                  />
-                </div>
-
-                {/* Phase Active */}
-                <div>
-                  <div className="flex items-center gap-2 mb-4">
-                    <div className="h-1 w-12 bg-gradient-to-r from-red-500 to-red-700 rounded"></div>
-                    <h2 className="text-2xl font-bold text-white">Phases Suivantes</h2>
-                    <div className="h-1 flex-1 bg-gradient-to-r from-red-700 to-transparent rounded"></div>
-                  </div>
-                  <p className="text-gray-400 text-sm mb-4">
-                    Basé sur un niveau "{activiteFactors[result.niveauProgramme].label}" - votre objectif avec le programme
-                  </p>
-
-                  {/* Maintenance Active */}
-                  <div className="bg-gradient-to-r from-gray-800 to-gray-700 rounded-2xl p-6 mb-4 border border-gray-600 shadow-xl">
-                    <div className="flex items-center justify-between">
-                      <div className="flex items-center gap-3">
-                        <Activity className="w-8 h-8 text-white" />
-                        <div>
-                          <h3 className="text-xl font-bold text-white">Maintenance</h3>
-                          <p className="text-sm text-gray-300">Pour maintenir votre poids avec le programme</p>
-                        </div>
-                      </div>
-                      <div className="text-right">
-                        <div className="text-3xl font-bold text-white">{result.phaseActive.maintenance}</div>
-                        <div className="text-sm text-gray-300">kcal/jour</div>
-                      </div>
-                    </div>
-                  </div>
-
-                  {/* Déficit Modéré Active */}
-                  <div className="mb-4">
-                    <DeficitCard 
-                      type="modere" 
-                      data={result.phaseActive.deficitModere} 
-                      otherDeficitData={result.phaseActive.deficitOptimal}
-                      phase="active"
-                    />
-                  </div>
-
-                  {/* Déficit Optimal Active */}
-                  <DeficitCard 
-                    type="optimal" 
-                    data={result.phaseActive.deficitOptimal} 
-                    otherDeficitData={result.phaseActive.deficitModere}
-                    phase="active"
-                  />
-                </div>
-              </>
-            ) : (
-              // Show single block for users already at "Actif" or above
-              <div>
-                <div className="flex items-center gap-2 mb-4">
-                  <div className="h-1 w-12 bg-gradient-to-r from-red-500 to-red-700 rounded"></div>
-                  <h2 className="text-2xl font-bold text-white">Vos besoins caloriques</h2>
-                  <div className="h-1 flex-1 bg-gradient-to-r from-red-700 to-transparent rounded"></div>
-                </div>
-
-                {/* Maintenance */}
-                <div className="bg-gradient-to-r from-gray-800 to-gray-700 rounded-2xl p-6 mb-4 border border-gray-600 shadow-xl">
-                  <div className="flex items-center justify-between">
-                    <div className="flex items-center gap-3">
-                      <Activity className="w-8 h-8 text-white" />
-                      <div>
-                        <h3 className="text-xl font-bold text-white">Maintenance</h3>
-                        <p className="text-sm text-gray-300">Pour maintenir votre poids actuel</p>
-                      </div>
-                    </div>
-                    <div className="text-right">
-                      <div className="text-3xl font-bold text-white">{result.phaseActive.maintenance}</div>
-                      <div className="text-sm text-gray-300">kcal/jour</div>
-                    </div>
+                  <div className="text-right">
+                    <div className="text-3xl font-bold text-white">{result.maintenance}</div>
+                    <div className="text-sm text-gray-300">kcal/jour</div>
                   </div>
                 </div>
+              </div>
 
-                {/* Déficit Modéré */}
-                <div className="mb-4">
-                  <DeficitCard 
-                    type="modere" 
-                    data={result.phaseActive.deficitModere} 
-                    otherDeficitData={result.phaseActive.deficitOptimal}
-                    phase="single"
-                  />
-                </div>
-
-                {/* Déficit Optimal */}
+              {/* Déficit Modéré */}
+              <div className="mb-4">
                 <DeficitCard 
-                  type="optimal" 
-                  data={result.phaseActive.deficitOptimal} 
-                  otherDeficitData={result.phaseActive.deficitModere}
-                  phase="single"
+                  type="modere" 
+                  data={result.deficitModere} 
+                  otherDeficitData={result.deficitIntense}
+                  phase="programme"
                 />
               </div>
-            )}
+
+              {/* Déficit Intense */}
+              <DeficitCard 
+                type="intense" 
+                data={result.deficitIntense} 
+                otherDeficitData={result.deficitModere}
+                phase="programme"
+              />
+            </div>
 
             {/* Info Box */}
             <div className="bg-gray-800/30 border border-gray-700 rounded-xl p-5">
@@ -493,18 +388,6 @@ export default function CalorieCalculator() {
                 <span className="font-semibold text-white">💡 Comment utiliser ces résultats :</span>
               </p>
               <ul className="mt-3 space-y-2 text-sm text-gray-300">
-                {result.showPhaseExplanation && (
-                  <>
-                    <li className="flex gap-2">
-                      <span className="text-red-500">•</span>
-                      <span><span className="font-semibold text-white">Phase Reset :</span> Utilisez ces valeurs si vous débutez le programme avec votre niveau d'activité actuel</span>
-                    </li>
-                    <li className="flex gap-2">
-                      <span className="text-red-500">•</span>
-                      <span><span className="font-semibold text-white">Phases suivantes :</span> Passez à ces valeurs une fois que vous vous entraînez régulièrement</span>
-                    </li>
-                  </>
-                )}
                 <li className="flex gap-2">
                   <span className="text-red-500">•</span>
                   <span><span className="font-semibold text-white">Déficit modéré recommandé :</span> -300 kcal/jour permet une perte progressive et durable, idéal pour préserver la masse musculaire et maintenir l'énergie au quotidien</span>
